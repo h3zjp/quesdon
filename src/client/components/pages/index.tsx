@@ -26,7 +26,16 @@ export class PageIndex extends React.Component {
                     これからも、宜しくお願いいたします。
                 </strong>
             </details>
+            <details>
+                  <summary>プッシュ通知が使えません</summary>
+                <strong>
+                    システム上の理由により、Pushbullet を利用した通知機能をご利用頂けません。
+                    申し訳ありませんが、宜しくお願いいたします。
+                </strong>
+            </details>
+            <br />
             <p>{me ? <Link to="/my">マイページ</Link> : <Link to="/login">ログイン</Link>}</p>
+            <hr />
             <PageLatest />
         </div>
     }
