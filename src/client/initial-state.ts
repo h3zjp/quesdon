@@ -7,5 +7,5 @@ export const csrfToken: string = w.CSRF_TOKEN
 
 export const usingDarkTheme: boolean = !!localStorage.getItem("using-dark-theme")
 
-export const upstreamUrl = "https://github.com/rinsuki/quesdon"
+export const upstreamUrl = "https://github.com/h3zjp/quesdon"
 export const gitVersion = w.GIT_VERSION

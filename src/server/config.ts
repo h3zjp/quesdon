@@ -11,7 +11,7 @@ export const BASE_URL = (HTTPS_ENABLED ? "https" : "http") + "://" + HOST
 export const MONGODB_URL = process.env.MONGODB_URL || "mongodb://localhost/quesdon"
 // export const REDIS_URL = process.env.REDIS_URL || "redis://localhost"
 
-export const SECRET_KEY = process.env.SECRET_KEY || "shibuyarin16544"
+export const SECRET_KEY = process.env.SECRET_KEY || "CiDsVgWXdf1fq5ZI"
 
 export var GIT_COMMIT = execSync("git rev-parse HEAD").toString().trim()
 

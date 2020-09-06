@@ -9,12 +9,36 @@ html
         script window.CSRF_TOKEN="#{csrfToken}"
         script window.GIT_VERSION="#{GIT_COMMIT}"
         script(src="https://cdn.polyfill.io/v2/polyfill.js?features=fetch")
+        if isProduction
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/react/16.8.1/umd/react.production.min.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.1/umd/react-dom.production.min.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/4.3.1/react-router-dom.min.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/reactstrap/5.0.0-beta.3/reactstrap.full.min.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js")
+        else
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/react/16.8.1/umd/react.development.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.1/umd/react-dom.development.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/4.3.1/react-router-dom.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/reactstrap/5.0.0-beta.3/reactstrap.full.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.js")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.js")
         script(src="/assets/bundle.js?version="+GIT_COMMIT)
     body
+        if !isProduction
+            #devEnvMessage(style="background: red; color: white; padding: 10px;text-align: center;")
+                | サーバーが開発環境として起動されています。
+                | もしこれが開発環境でない場合は、NODE_ENV=production を指定して再起動して下さい。
+        else
+            #webpackDevBuildMessage(style="display: none;background: yellow;padding: 10px;text-align: center;")
+                | 管理者向け: サーバーは本番環境として実行されていますが、クライアントリソースが開発環境用にビルドされています。
+                | 開発環境用のビルドを本番環境で利用すると、予期せぬ問題が発生する可能性があります。
+                | ビルド時に環境変数 <code>NODE_ENV=production</code> を指定すると、このメッセージは出なくなります。
         #root
-            p ...あれ、もしかしてページが表示されてませんか?
-            p ご迷惑をおかけしています。何回かリロードしていただいた後、それでもこの画面が表示されるようでしたら、以下の動作環境を満たしていることを確認した後、Mastodon @quesdon@mstdn.jp もしくは Twitter @quesdon までお問い合わせください。
-            p: strong 2018年1月20日深夜に大幅アップデートを行いました。以前は閲覧できていたのに1月20日以降に閲覧できなくなった場合は、こちらのミスである可能性が非常に高いです。お手数ですが、 Mastodonの @quesdon@mstdn.jp もしくは Twitter @quesdon までお問い合わせください。
+            p …あれ、もしかしてページが表示されてませんか?
+            p ご迷惑をおかけしています。何回かリロードして頂いた後、それでもこの画面が表示されるようでしたら、以下の動作環境を満たしていることを確認したあと、Mastodon @quesdon@mstdn.h3z.jp もしくは Twitter @h3zjp までお問い合わせ下さい。
             h2 動作環境
             ul
                 li iOS 
@@ -22,4 +46,4 @@ html
                     | &nbsp;10以上 (推奨: iOS 11.2.2以上)
                 li Chrome 63以上
                 li Firefox 57以上
-            p Edge, Internet Explorerは動作対象外です。Google Chrome、もしくはFirefoxをお使いください。
+            p Microsoft Edge (旧Edge), Internet Explorer は動作対象外です。Google Chrome、もしくは Mozilla Firefox をお使い下さい。

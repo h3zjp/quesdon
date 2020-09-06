@@ -1,9 +1,9 @@
 export default [
+    "mstdn.h3z.jp",
     "mastodon.social",
     "mstdn.jp",
-    "friends.nico",
     "pawoo.net",
-    "music.pawoo.net",
-    "imastodon.net",
-    "mstdn.maud.io",
+    "mastodon.cloud",
+    "fedibird.com",
+    "mstdn.maud.io"
 ]

@@ -8,15 +8,24 @@ export class PageIndex extends React.Component {
         return <div>
             <title>Quesdon</title>
             <h1>Quesdon</h1>
-            <p>ザ・インタビューズとかaskfmとかそんなかんじのやつのMastodonアカウントで使えるやつです</p>
-            <p>
-                <h5>Twitterアカウントでのログインについて</h5>
+            <p>ザ･インタビューズとかaskfmとかそんなかんじのやつのMastodonアカウントで使えるやつです</p>
+            <details>
+                  <summary>2020/07/05更新： 動作不具合を修正しました</summary>
                 <strong>
-                    Twitterアカウントでのログインを2018年9月30日で廃止します。
-                    廃止後は、これまでTwitterアカウントで答えた回答などが見れなくなります。
-                    Mastodonアカウントに質問を移行したい方は管理者までお問い合わせください。
+                    設定不備により、正常に動作しなくなっていたことを発見しました。
+                    修正し、現在は正常に動作することを確認しております。
+                    ご不便をお掛けし申し訳ありませんでした。
+                    これからも、宜しくお願いいたします。
                 </strong>
-            </p>
+            </details>
+            <details>
+                  <summary>2020/09/06更新： Twitterサポートを復活しました</summary>
+                <strong>
+                    Twitterサポートを復活しました。
+                    以前と変わらずにご利用頂けます。
+                    これからも、宜しくお願いいたします。
+                </strong>
+            </details>
             <p>{me ? <Link to="/my">マイページ</Link> : <Link to="/login">ログイン</Link>}</p>
             <PageLatest />
         </div>

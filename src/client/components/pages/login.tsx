@@ -21,10 +21,10 @@ export class PageLogin extends React.Component<{}, State> {
         return <div>
             <Title>ログイン</Title>
             <h1>ログイン</h1>
-            <p>あなたのMastodonアカウントがあるインスタンスを入力してください。</p>
+            <p>あなたのMastodonアカウントがあるインスタンスを入力して下さい。</p>
             <form action="javascript://" onSubmit={this.send.bind(this)}>
                 <FormGroup>
-                    <Input name="instance" placeholder="mastodon.social" list="major-instances"/>
+                    <Input name="instance" placeholder="mstdn.h3z.jp" list="major-instances"/>
                     <datalist id="major-instances">
                         {majorInstances.map((instance) => <option value={instance} />)}
                     </datalist>
@@ -35,17 +35,6 @@ export class PageLogin extends React.Component<{}, State> {
                     { loading ? "読み込み中" : "Twitterでログイン" }
                 </Button>
             </form>
-            <Alert color="danger" className="mt-3">
-                <h5>Twitterアカウントでのサービス提供終了について</h5>
-                <p>Twitterの開発者向けポリシー改定の影響で、QuesdonでのTwitterアカウントを利用したサービス提供を<strong>2018年9月30日</strong>に停止します。</p>
-                <p>これ以降は、TwitterアカウントでQuesdonにログインできなくなり、またTwitterアカウントで開設した質問箱で回答した質問等も閲覧できなくなります。</p>
-                <p>Mastodonアカウントへの質問データの移行は、該当するTwitterアカウントからTwitter
-                    <a href="https://twitter.com/quesdon">@quesdon</a>
-                    までダイレクトメッセージでお問い合わせください。
-                </p>
-                <p>ご利用ありがとうございました。</p>
-                <strong>なお、Mastodonアカウントでログインされているユーザーの皆様には影響はありません。</strong>これまで通りサービスをご利用いただけます。
-            </Alert>
         </div>
     }
 
@@ -58,7 +47,7 @@ export class PageLogin extends React.Component<{}, State> {
             loading: true,
         })
         function errorMsg(code: number | string) {
-            return "ログインに失敗しました。入力内容をご確認の上、再度お試しください (" + code + ")"
+            return "ログインに失敗しました。入力内容をご確認の上、再度お試し下さい (" + code + ")"
         }
         const req = await apiFetch("/api/web/oauth/get_url", {
             method: "POST",
