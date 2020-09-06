@@ -29,9 +29,6 @@ router.get("/followers", async ctx => {
   if (!ctx.session!.user) return ctx.throw("please login", 403)
   const user = await User.findById(ctx.session!.user)
   if (!user) return ctx.throw("not found", 404)
-  if (user.hostName === "twitter.com") {
-    return { max_id: undefined, accounts: [] }
-  }
   var at = ctx.session!.token
   if (!at) {
     at = user.accessToken
@@ -130,9 +127,6 @@ router.get("/all_users", async ctx => {
   const user = await User.findById(ctx.session!.user)
   if (!user) return ctx.throw("not found", 404)
   if (user.acctLower != ADMIN) return ctx.throw("not admin", 403)
-  if (user.hostName === "twitter.com") {
-    return { max_id: undefined, accounts: [] }
-  }
   const users = await User.find()
   ctx.body = users
 })
@@ -159,7 +153,6 @@ router.post("/update", async ctx => {
 router.get("/id/:id", async ctx => {
   const user = await User.findById(ctx.params.id)
   if (!user) return ctx.throw("not found", 404)
-  if (user.hostName === "twitter.com") return ctx.throw("not found", 404)
   ctx.body = user
 })
 
@@ -212,16 +205,12 @@ router.post("/pushbullet/disconnect", async ctx => {
 })
 
 router.get("/:acct", async ctx => {
-  if (ctx.params.acct.toLowerCase().endsWith("twitter.com"))
-    return ctx.throw("twitter service is finished.", 404)
   const user = await User.findOne({ acctLower: ctx.params.acct.toLowerCase() })
   if (!user) return ctx.throw("not found", 404)
   ctx.body = user
 })
 
 router.post("/:acct/question", async ctx => {
-  if (ctx.params.acct.toLowerCase().endsWith("twitter.com"))
-    return ctx.throw("twitter service is finished.", 404)
   const questionString = ctx.request.body.fields.question
   if (questionString.length < 1) return ctx.throw("please input question", 400)
   if (questionString.length > QUESTION_TEXT_MAX_LENGTH)
@@ -302,8 +291,6 @@ router.post("/:acct/import", async ctx => {
 })
 
 const getAnswers = async (ctx: Koa.Context) => {
-  if (ctx.params.acct.toLowerCase().endsWith("twitter.com"))
-    return ctx.throw("twitter service is finished.", 404)
   const user = await User.findOne({ acctLower: ctx.params.acct.toLowerCase() })
   if (!user) return ctx.throw("not found", 404)
   const questions = await Question.find({
