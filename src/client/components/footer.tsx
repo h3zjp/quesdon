@@ -5,21 +5,22 @@ import { gitVersion, upstreamUrl, usingDarkTheme } from "../initial-state"
 export class Footer extends React.Component {
     render() {
         return <footer className="container">
-            <hr />
-            <p>Quesdon は AGPL-3.0 で提供されています。<a href={upstreamUrl} target="_blank">ソースコード</a>&nbsp;
-            (<a href={`${upstreamUrl}/commits/${gitVersion}`}>{gitVersion.slice(0, 7)}</a>)</p>
-            <p>
-                公式アカウント: <a href="https://mstdn.h3z.jp/@quesdon" target="_blank">@quesdon@mstdn.h3z.jp</a>
-                &#65372;
-                <Link to="/@quesdon@mstdn.h3z.jp">公式Quesdon</Link> (要望や不具合報告もこちらへどうぞ)
-            </p>
+            <div className="data">
+            <p>公式アカウント: <a href="https://mstdn.h3z.jp/@quesdon" target="_blank">@quesdon@mstdn.h3z.jp</a></p>
             <p>開発者: <a href="https://mstdn.maud.io/@rinsuki" target="_blank">@rinsuki@mstdn.maud.io</a></p>
-            <p>
+            <p><a href="/@quesdon@mstdn.h3z.jp">公式Quesdon</a> (要望や不具合報告もこちらへどうぞ)</p>
+            </div>
+            <div className="logo">
+                <p className="title">Quesdon</p>
+                <p>AGPL-3.0&nbsp;<a target="_blank" href={upstreamUrl}>ソースコード</a>&nbsp;
+                (<a target="_blank" href={`${upstreamUrl}/commits/${gitVersion}`}>{gitVersion.slice(0, 7)}</a>)</p>
+            </div><br />
+            <div className="darktheme">
                 {usingDarkTheme
-                ?   <a href="#" onClick={this.leaveDarkTheme.bind(this)}>ダークテーマから戻す</a>
-                :   <a href="#" onClick={this.enterDarkTheme.bind(this)}>ダークテーマにする(β)</a>
+                ?   <button className="btn" onClick={this.leaveDarkTheme.bind(this)}>ダークテーマから戻す</button>
+                :   <button className="btn" onClick={this.enterDarkTheme.bind(this)}>ダークテーマにする(β)</button>
                 }
-            </p>
+            </div>
         </footer>
     }
 

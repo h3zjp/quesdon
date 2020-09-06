@@ -6,6 +6,7 @@ import { APIQuestion } from "../../api-interfaces"
 import { apiFetch } from "../api-fetch"
 import { Checkbox } from "./common/checkbox"
 import { UserLink } from "./userLink"
+import { me } from "../initial-state"
 
 interface Props extends APIQuestion {
     hideAnswerUser?: boolean | undefined
@@ -37,6 +38,8 @@ export class Question extends React.Component<Props, State> {
                         {moment(this.props.answeredAt).format("YYYY-MM-DD HH:mm:ss")}
                     </Link>}
                     {this.renderQuestionUser()}
+                    {this.props.answeredAt ? this.nsfwAdd() : null }
+                    {this.renderQuestionUserForAdmin()}
                 </CardSubtitle>
                 {this.props.answeredAt ? this.renderAnswer() : this.renderAnswerForm()}
             </CardBody>
@@ -59,6 +62,17 @@ export class Question extends React.Component<Props, State> {
     }
 
     renderQuestionUser() {
+        if (!this.props.questionAnon) return null
+        if (!this.props.questionUser) return null
+        return <span className="mr-2">
+            質問者:&nbsp;
+            <UserLink {...this.props.questionUser}/>
+        </span>
+    }
+
+    renderQuestionUserForAdmin() {
+        if (!me) return null
+        if (!me.isAdmin) return null
         if (!this.props.questionUser) return null
         return <span className="mr-2">
             質問者:&nbsp;
@@ -79,12 +93,13 @@ export class Question extends React.Component<Props, State> {
             <span className="ml-3">公開範囲: </span>
             <Input type="select" name="visibility" style={{width: "inherit", display: "inline-block"}}>
                 <option value="public">公開</option>
-                <option value="unlisted">未収録</option>
+                <option value="unlisted">未収載</option>
                 <option value="private">非公開</option>
                 <option value="no">投稿しない</option>
             </Input>
             <Checkbox name="isNSFW" value="true" className="ml-2">NSFW</Checkbox>
-            <Button type="button" color="danger" style={{float: "right"}} onClick={this.onDelete.bind(this)}>削除</Button>
+            <Button type="button" color="warning" style={{float: "right"}} onClick={this.onDelete.bind(this)}>削除</Button>
+            <Button type="button" color="danger" style={{float: "right"}} onClick={this.onReport.bind(this)}>削除して通報</Button>
         </form>
     }
 
@@ -113,7 +128,47 @@ export class Question extends React.Component<Props, State> {
         })
     }
 
+    onReport(e: any) {
+        const det = prompt("質問を削除して通報します。\n通報された質問は管理者以外から見えなくなります。\n以下に通報の詳細を記入出来ます。")
+        if (!det) return
+        apiFetch("/api/web/questions/" + this.props._id + "/report", {
+            method: "POST",
+            body: JSON.stringify( {report: det }),
+        }).then((r) => r.json()).then((r) => {
+            alert("削除し、通報しました")
+            location.reload()
+        })
+    }
+
     nsfwGuardClick() {
         this.setState({nsfwGuard: false})
+    }
+
+    nsfwAdd() {
+        if (!me) return null
+        if (!me.isAdmin) return null
+        if (this.props.isNSFW) return null
+        return <a href="javascript://" onClick={this.onAddNSFW.bind(this)}>NSFWにする</a>
+    }
+
+    onAddNSFW(e: any) {
+        if (confirm("NSFWに設定しますか?")) {
+            apiFetch("/api/web/questions/" + this.props._id + "/nsfw/set", {
+                method: "POST",
+            }).then((r) => r.json()).then((r) => {
+                if (confirm("警告文を送りますか?")) {
+                    apiFetch("/api/web/questions/" + this.props._id + "/nsfw/send", {
+                        method: "POST",
+                    }).then((r) => r.json()).then((r) => {
+                        alert("送信しました。")
+                        location.reload()
+                    })
+                }else {
+                    alert("送信されませんでしたが、NSFWに設定しました。")
+                    location.reload() 
+                }
+            })
+        }
+        
     }
 }

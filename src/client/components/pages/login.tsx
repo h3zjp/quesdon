@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Alert, Button, FormGroup, Input } from "reactstrap"
+import { Alert, Button, FormGroup, Input, Label} from "reactstrap"
 import { apiFetch } from "../../api-fetch"
 import majorInstances from "../../major-instances"
 import { Title } from "../common/title"
@@ -21,13 +21,19 @@ export class PageLogin extends React.Component<{}, State> {
         return <div>
             <Title>ログイン</Title>
             <h1>ログイン</h1>
-            <p>あなたのMastodonアカウントがあるインスタンスを入力して下さい。</p>
+            <p>あなたのアカウントがある Mastodon インスタンスを入力して下さい。</p>
             <form action="javascript://" onSubmit={this.send.bind(this)}>
                 <FormGroup>
                     <Input name="instance" placeholder="mstdn.h3z.jp" list="major-instances"/>
                     <datalist id="major-instances">
                         {majorInstances.map((instance) => <option value={instance} />)}
                     </datalist>
+                </FormGroup>
+                <FormGroup check>
+                <Label check>
+                    <Input type="checkbox" name="misskey"　/>{' '}
+                    Misskeyとしてログイン
+                </Label>
                 </FormGroup>
                 <Button type="submit" color="primary" disabled={loading}>{ loading ? "読み込み中" : "ログイン" }</Button>
                 <span>&nbsp;もしくは&nbsp;</span>

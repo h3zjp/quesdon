@@ -39,6 +39,7 @@ export class App extends React.Component {
                     <Route component={PageNotFound}/>
                 </Switch>
                 </main>
+                <hr />
                 <Footer />
             </div>
             </BrowserRouter>

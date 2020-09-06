@@ -3,7 +3,7 @@ import * as fs from "fs"
 import * as Router from "koa-router"
 import * as mongoose from "mongoose"
 import fetch from "node-fetch"
-import { BASE_URL } from "../../config"
+import { BASE_URL, ADMIN, TOOT_ORIGIN, TOOT_TOKEN} from "../../config"
 import { IMastodonApp, IUser, Question, QuestionLike, User } from "../../db/index"
 import { cutText } from "../../utils/cutText"
 import { questionLogger } from "../../utils/questionLog"
@@ -19,7 +19,15 @@ router.get("/", async (ctx) => {
         answeredAt: null,
         isDeleted: {$ne: true},
     })
-    ctx.body = JSON.stringify(questions)
+    var response=[]
+    for(var i=0;i<questions.length;i++){
+        var question=questions[i]
+        if(!question.questionAnon){
+            question.questionUser=null;
+        }
+        response.push(question)
+    }
+    ctx.body = JSON.stringify(response)
 })
 
 router.get("/count", async (ctx) => {
@@ -33,11 +41,43 @@ router.get("/count", async (ctx) => {
 })
 
 router.get("/latest", async (ctx) => {
-    const questions = await Question.find({
+    if (ctx.session!.user){
+        //Logined
+        const me = await User.findById(ctx.session!.user)
+        if (!me) return ctx.throw("not found", 404)
+        var mine = me.acctLower
+    } else {
+        var mine = ""
+    }
+    let questions = await Question.find({
         answeredAt: {$ne: null},
         isDeleted: {$ne: true},
     }).limit(20).sort("-answeredAt")
-    ctx.body = questions
+    var response=[]
+    for(var i=0;i<questions.length;i++){
+        var question=questions[i]
+        if(!question.questionAnon && mine != ADMIN){
+            question.questionUser=null;
+        }
+        response.push(question)
+    }
+    ctx.body = response
+})
+
+router.get("/get_reported", async (ctx) => {
+    if (!ctx.session!.user) return ctx.throw("please login", 403)
+    const me = await User.findById(ctx.session!.user)
+    if (!me) return ctx.throw("not found", 404)
+    if (me.acctLower != ADMIN) return ctx.throw("not admin", 403)
+    let questions = await Question.find({
+        isReported: true,
+    }).limit(20).sort("-createdAt")
+    var response=[]
+    for(var i=0;i<questions.length;i++){
+        var question=questions[i]
+        response.push(question)
+    }
+    ctx.body = response
 })
 
 router.post("/:id/answer", async (ctx) => {
@@ -66,14 +106,14 @@ router.post("/:id/answer", async (ctx) => {
             status: [
                 "A. ",
                 (question.answer!.length > 200
-                    ? question.answer!.substring(0, 200) + "...(続きはリンク先で)"
+                    ? question.answer!.substring(0, 200) + "…(続きはリンク先で)"
                     : question.answer),
                 "\n#quesdon ",
                 answerUrl,
             ].join(""),
             visibility: ctx.request.body.fields.visibility,
         }
-        if (question.questionUser) {
+        if (question.questionAnon && question.questionUser) {
             var questionUserAcct = "@" + question.questionUser.acct
             if (question.questionUser.hostName === "twitter.com") {
                 questionUserAcct = "https://twitter.com/" + question.questionUser.acct.replace(/:.+/, "")
@@ -84,14 +124,43 @@ router.post("/:id/answer", async (ctx) => {
             body.status = "Q. " + question.question + "\n" + body.status
             body.spoiler_text = "⚠ この質問は回答者がNSFWであると申告しています #quesdon"
         }
-        fetch("https://" + user!.acct.split("@")[1] + "/api/v1/statuses", {
-            method: "POST",
-            body: JSON.stringify(body),
-            headers: {
-                "Authorization": "Bearer " + user!.accessToken,
-                "Content-Type": "application/json",
-            },
-        })
+        var at=ctx.session!.token;
+        if(!at){
+            at=user.accessToken
+        }
+        if(~at.indexOf("misskey_")){
+            var vis=null;
+            if (body.visibility=="public") {
+                vis="public";
+            } else if (body.visibility=="unlisted") {
+                vis="home";
+            } else if (body.visibility=="unlisted") {
+                vis="followers";
+            } else {
+                vis="public";
+            }
+            fetch("https://" + user!.acct.split("@")[1] + "/api/notes/create", {
+                method: "POST",
+                body: JSON.stringify({
+                    i:at.split("_")[1],
+                    text:body.status,
+                    cw:body.spoiler_text,
+                    visibility:vis
+                }),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+        }else{
+            fetch("https://" + user!.acct.split("@")[1] + "/api/v1/statuses", {
+                method: "POST",
+                body: JSON.stringify(body),
+                headers: {
+                    "Authorization": "Bearer " + user!.accessToken,
+                    "Content-Type": "application/json",
+                },
+            })
+        }
     } else {
         const strQ = cutText(question.question, 60)
         const strA = cutText(question.answer!, 120 - strQ.length)
@@ -118,6 +187,32 @@ router.post("/:id/delete", async (ctx) => {
     question.isDeleted = true
     await question.save()
     ctx.body = {status: "ok"}
+})
+
+router.post("/:id/report", async (ctx) => {
+    if (!ctx.session!.user) return ctx.throw("please login", 403)
+    const question = await Question.findById(ctx.params.id)
+    if (!question) return ctx.throw("not found", 404)
+    // tslint:disable-next-line:triple-equals
+    if (question.user._id != ctx.session!.user) return ctx.throw("not found", 404)
+    question.isDeleted = true
+    question.isReported = true
+    const body = JSON.parse(ctx.request.body)
+    question.answer = body.report
+    question.answeredAt = new Date()
+    await question.save()
+    ctx.body = {status: "ok"}
+    fetch("https://" + TOOT_ORIGIN + "/api/v1/statuses", {
+        method: "POST",
+        body: JSON.stringify({
+            visibility: "direct",
+            status: '@' + ADMIN + ' 通報された質問があります',
+        }),
+        headers: {
+        "Authorization": "Bearer " + TOOT_TOKEN,
+        "Content-Type": "application/json",
+        }
+    })
 })
 
 router.post("/:id/like", async (ctx) => {
@@ -230,6 +325,57 @@ ${JSON.stringify(user, null, 4)}
     )
     archive.finalize()
     await p
+})
+
+router.post("/:id/nsfw/set", async (ctx) => {
+    if (!ctx.session!.user) return ctx.throw("please login", 403)
+    const me = await User.findById(ctx.session!.user)
+    if (!me) return ctx.throw("not found", 404)
+    if (me.acctLower != ADMIN) return ctx.throw("not admin", 403)
+    const question = await Question.findById(ctx.params.id)
+    if (!question) return ctx.throw("not found", 404)
+    question.isNSFW = true
+    await question.save()
+    ctx.body = {status: "ok"}
+})
+router.post("/:id/nsfw/send", async (ctx) => {
+    if (!ctx.session!.user) return ctx.throw("please login", 403)
+    const me = await User.findById(ctx.session!.user)
+    if (!me) return ctx.throw("not found", 404)
+    if (me.acctLower != ADMIN) return ctx.throw("not admin", 403)
+    const question = await Question.findById(ctx.params.id)
+    if (!question) return ctx.throw("not found", 404)
+    if(question.questionUser){
+        const questionUser = question.questionUser
+        const user = question.user
+        const url = BASE_URL + "/@" +user.acct + "/questions/" + question._id
+        fetch("https://" + TOOT_ORIGIN + "/api/v1/statuses", {
+            method: "POST",
+            body: JSON.stringify({
+                visibility: "direct",
+                status: "@"+questionUser.acctLower+" 質問が利用規約に反するためNSFWに設定されました。次回以降凍結される可能性がありますのでご注意下さい。\n該当の質問" + url,
+            }),
+            headers: {
+            "Authorization": "Bearer " + TOOT_TOKEN,
+            "Content-Type": "application/json",
+            }
+        })
+        fetch("https://" + TOOT_ORIGIN + "/api/v1/statuses", {
+            method: "POST",
+            body: JSON.stringify({
+                visibility: "direct",
+                status: "@"+user.acctLower+" 質問が利用規約に反するためNSFWに設定されました。次回以降凍結される可能性がありますのでご注意下さい。\n該当の質問" + url,
+            }),
+            headers: {
+            "Authorization": "Bearer " + TOOT_TOKEN,
+            "Content-Type": "application/json",
+            }
+        })
+        ctx.body = {status: "ok"}
+    }else{
+        ctx.body = {status: "error"}
+    }
+    
 })
 
 export default router

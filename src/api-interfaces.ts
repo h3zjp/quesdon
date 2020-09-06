@@ -7,8 +7,9 @@ export interface APIQuestion {
     isNSFW: boolean
     likesCount: number
     isDeleted: boolean
-
+    isReported: boolean
     questionUser: APIUser | undefined
+    questionAnon: boolean
     answer: string | undefined
     answeredAt: string | undefined
 }
@@ -28,5 +29,7 @@ export interface APIUser {
     hostName: string
     pushbulletEnabled: boolean
     isTwitter: boolean
-    stopNewQuestion: boolean
+    stopNewQuestion: boolean,
+    isAdmin: boolean,
+    isDeleted: boolean
 }

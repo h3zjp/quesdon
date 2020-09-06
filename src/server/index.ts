@@ -31,6 +31,9 @@ const router = new Router()
 router.use("/api", apiRouter.routes())
 
 router.get("/*", async (ctx) => {
+    if(!ctx.session!.token){
+        ctx.session!.user=null;
+    }
     var user
     if (ctx.session!.user) {
         user = await User.findById(ctx.session!.user)

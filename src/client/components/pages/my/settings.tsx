@@ -11,7 +11,8 @@ interface State {
     questionBoxNameMax: number
     descriptionCount: number
     questionBoxNameCount: number
-    saving: boolean
+    saving: boolean,
+    savingImport: boolean
 }
 
 export class PageMySettings extends React.Component<{}, State> {
@@ -24,6 +25,7 @@ export class PageMySettings extends React.Component<{}, State> {
             descriptionCount: (me.description || "").length,
             questionBoxNameCount: (me.questionBoxName || "質問箱").length,
             saving: false,
+            savingImport: false
         }
     }
     render() {
@@ -72,11 +74,29 @@ export class PageMySettings extends React.Component<{}, State> {
             <h2 className="mt-3 mb-2">やばいゾーン</h2>
             <Button color="danger" onClick={this.allDeleteQuestions.bind(this)}>自分宛ての質問を(回答済みのものも含めて)すべて削除</Button>&nbsp;
             <Button color="success" onClick={this.exportAnswers.bind(this)}>回答済みの質問を一括エクスポート</Button>
+            <hr />
+            <h2 className="mt-3 mb-2">インポート</h2>
+            その他 Quesdon から未回答の質問をインポート!
+            <form action="javascript://" onSubmit={this.onImport.bind(this)}>
+                <FormGroup>
+                    <label>未回答の質問をインポート</label>
+                    <Input type="textarea" name="question"
+                        placeholder="ここに貼り付け"/>
+                    <FormText>JSON String</FormText>
+                </FormGroup>
+                <Button type="submit" color="primary" disabled={this.sendableFormImport()}>
+                    送信{this.state.savingImport && "しています…"}
+                </Button>
+            </form>
         </div>
     }
 
     sendableForm() {
         return this.questionBoxNameRemaining() < 0 || this.descriptionRemaining() < 0 || this.state.saving
+    }
+
+    sendableFormImport() {
+        return this.state.saving
     }
 
     descriptionRemaining() {
@@ -101,7 +121,7 @@ export class PageMySettings extends React.Component<{}, State> {
 
     async pushbulletDisconnect() {
         function errorMsg(code: number | string) {
-            return "通信に失敗しました。再度お試しください (" + code + ")"
+            return "通信に失敗しました。再度お試し下さい (" + code + ")"
         }
         const req = await apiFetch("/api/web/accounts/pushbullet/disconnect", {
             method: "POST",
@@ -125,13 +145,13 @@ export class PageMySettings extends React.Component<{}, State> {
 
     async allDeleteQuestions() {
         function errorMsg(code: number | string) {
-            return "通信に失敗しました。再度お試しください (" + code + ")"
+            return "通信に失敗しました。再度お試し下さい (" + code + ")"
         }
         if (!me) return
         const rand = Math.floor(Math.random() * 9) + 1
-        if (prompt(`あなた(@${me.acctDisplay})あてに来た質問を「回答済みのものも含めて全て」削除します。
+        if (prompt(`あなた(@${me.acctDisplay})あてに来た質問を ｢回答済みのものも含めて全て｣ 削除します。
 
-確認のために「${rand}」を下に入力してください(数字だけ入力してください)`, "") !== rand.toString()) return
+確認のために ｢${rand}｣ を下に入力して下さい (数字だけ入力して下さい)`, "") !== rand.toString()) return
         const req = await apiFetch("/api/web/questions/all_delete", {
             method: "POST",
         }).catch((e) => {
@@ -167,7 +187,7 @@ export class PageMySettings extends React.Component<{}, State> {
 
     async onSubmit(e: any) {
         function errorMsg(code: number | string) {
-            return "通信に失敗しました。再度お試しください (" + code + ")"
+            return "通信に失敗しました。再度お試し下さい (" + code + ")"
         }
         this.setState({saving: true})
 
@@ -199,6 +219,44 @@ export class PageMySettings extends React.Component<{}, State> {
         if (!res) return
 
         alert("更新しました!")
+        location.reload()
+    }
+
+    async onImport(e: any) {
+        function errorMsg(code: number | string) {
+            return "通信に失敗しました。再度お試し下さい (" + code + ")"
+        }
+        this.setState({savingImport: true})
+
+        const form = new FormData(e.target)
+        if (!me) return
+        const req = await apiFetch("/api/web/accounts/" + me.acctDisplay + "/import", {
+            method: "POST",
+            body: form,
+        }).catch(() => {
+            alert(errorMsg(-1))
+            this.setState({
+                savingImport: false,
+            })
+        })
+        if (!req) return
+        if (!req.ok) {
+            alert(errorMsg("HTTP-" + req.status))
+            this.setState({
+                savingImport: false,
+            })
+            return
+        }
+
+        const res = req.json().catch(() => {
+            alert(errorMsg(-2))
+            this.setState({
+                savingImport: false,
+            })
+        })
+        if (!res) return
+
+        alert("インポートしました!")
         location.reload()
     }
 

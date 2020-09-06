@@ -17,3 +17,9 @@ export var GIT_COMMIT = execSync("git rev-parse HEAD").toString().trim()
 
 export const PUSHBULLET_CLIENT_ID = process.env.PUSHBULLET_CLIENT_ID
 export const PUSHBULLET_CLIENT_SECRET = process.env.PUSHBULLET_CLIENT_SECRET
+
+//Original: DM when posted questions.
+export const TOOT_ORIGIN = process.env.TOOT_ORIGIN
+export const TOOT_TOKEN = process.env.TOOT_TOKEN
+//Original: Admin(lowAcct)
+export const ADMIN =( process.env.ADMIN ?  process.env.ADMIN : "")
